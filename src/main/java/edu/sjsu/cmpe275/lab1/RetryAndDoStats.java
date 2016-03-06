@@ -2,16 +2,17 @@ package edu.sjsu.cmpe275.lab1;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class RetryAndDoStats implements MethodInterceptor, ApplicationContextAware {
-    private TweetStatsImpl tweetStats;
+public class RetryAndDoStats implements MethodInterceptor {
     // retry times because network error.
     private static int count = 0;
+    private static final int RETRY_TIMES = 3;
 
     /***
      * Following is the dummy implementation of advice.
@@ -27,29 +28,29 @@ public class RetryAndDoStats implements MethodInterceptor, ApplicationContextAwa
             Object retVal = invocation.proceed();
 
             if (isFollowMethod(invocation)) {
-                tweetStats.logFollow(arg1, arg2);
+                Statics.getInstance().logFollow(arg1, arg2);
             } else if (isTweetMethod(invocation)) {
-                tweetStats.logTweet(arg1, arg2);
+                Statics.getInstance().logTweet(arg1, arg2);
             }
 
             return retVal;
 
         } catch (IOException ioe) {
             // retry 3 times
-            if (count <= 3) {
+            if (count <= RETRY_TIMES) {
                 invoke(invocation);
                 count++;
             } else {
                 // retry over 3 times
                 count = 0;
                 if (isTweetMethod(invocation)) {
-                    tweetStats.logFailedTweet(arg1, arg2);
+                    Statics.getInstance().logFailedTweet(arg1, arg2);
                 }
                 throw ioe;
             }
         } catch (IllegalArgumentException e) {
             if (isTweetMethod(invocation)) {
-                tweetStats.logFailedTweet(arg1, arg2);
+                Statics.getInstance().logFailedTweet(arg1, arg2);
             }
             throw e;
         }
@@ -64,8 +65,74 @@ public class RetryAndDoStats implements MethodInterceptor, ApplicationContextAwa
     private boolean isFollowMethod(MethodInvocation invocation) {
         return invocation.getMethod().getName().equals("follow");
     }
+}
 
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        tweetStats = (TweetStatsImpl) applicationContext.getBean("tweetStats");
+class Statics {
+    // The longest attempted tweet length.
+    private int longestAttemptedTweetLength;
+    // The user and followee number map.
+    private Map<String, Set<String>> userFollowee;
+    // The user and Tweeter length map.
+    private Map<String, Integer> userTweeterLength;
+
+    //SingleTon
+    private Statics() {
+        longestAttemptedTweetLength = 0;
+        userFollowee = new HashMap<String, Set<String>>();
+        userTweeterLength = new HashMap<String, Integer>();
+    }
+
+    private static Statics instance = null;
+
+    public static Statics getInstance() {
+        if (instance == null) {
+            instance = new Statics();
+        }
+        return instance;
+    }
+
+    public void resetStats() {
+        longestAttemptedTweetLength = 0;
+        userFollowee.clear();
+        userTweeterLength.clear();
+    }
+
+    public void logTweet(String user, String message) {
+        if (!userTweeterLength.containsKey(user)) {
+            userTweeterLength.put(user, 0);
+        }
+
+        userTweeterLength.put(user, userTweeterLength.get(user) + message.length());
+        updateLongestAttemptedTweetLength(message);
+    }
+
+    public void logFailedTweet(String user, String message) {
+        updateLongestAttemptedTweetLength(message);
+    }
+
+    public void logFollow(String follower, String followee) {
+        if (!userFollowee.containsKey(followee)) {
+            userFollowee.put(followee, new HashSet<String>());
+        }
+
+        userFollowee.get(followee).add(follower);
+    }
+
+    public int getLongestAttemptedTweetLength() {
+        return longestAttemptedTweetLength;
+    }
+
+    public Map<String, Set<String>> getUserFollowee() {
+        return userFollowee;
+    }
+
+    public Map<String, Integer> getUserTweeterLength() {
+        return userTweeterLength;
+    }
+
+    private void updateLongestAttemptedTweetLength(String message) {
+        if (message.length() > longestAttemptedTweetLength) {
+            longestAttemptedTweetLength = message.length();
+        }
     }
 }

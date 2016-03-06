@@ -1,13 +1,9 @@
 package edu.sjsu.cmpe275.lab1;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class TweetStatsImpl implements TweetStats {
-    // The longest attempted tweet length.
-    private int longestAttemptedTweetLength;
     // The user and followee number map.
     private Map<String, Set<String>> userFollowee;
     // The user and Tweeter length map.
@@ -19,21 +15,18 @@ public class TweetStatsImpl implements TweetStats {
      */
 
     public TweetStatsImpl() {
-        longestAttemptedTweetLength = 0;
-        userFollowee = new HashMap<String, Set<String>>();
-        userTweeterLength = new HashMap<String, Integer>();
+        userFollowee = Statics.getInstance().getUserFollowee();
+        userTweeterLength = Statics.getInstance().getUserTweeterLength();
     }
 
     @Override
     public void resetStats() {
-        longestAttemptedTweetLength = 0;
-        userFollowee.clear();
-        userTweeterLength.clear();
+        Statics.getInstance().resetStats();
     }
 
     @Override
     public int getLengthOfLongestTweetAttempted() {
-        return longestAttemptedTweetLength;
+        return Statics.getInstance().getLongestAttemptedTweetLength();
     }
 
     @Override
@@ -52,6 +45,7 @@ public class TweetStatsImpl implements TweetStats {
         for (Map.Entry<String, Set<String>> entry : userFollowee.entrySet()) {
             if (entry.getValue().size() > mostFollowedeNumber) {
                 mostFollowedUser = entry.getKey();
+                mostFollowedeNumber = entry.getValue().size();
             } else if (entry.getValue().size() == mostFollowedeNumber &&
                     entry.getKey().compareTo(mostFollowedUser) < 0) {
                 mostFollowedUser = entry.getKey();
@@ -77,40 +71,13 @@ public class TweetStatsImpl implements TweetStats {
         for (Map.Entry<String, Integer> entry : userTweeterLength.entrySet()) {
             if (entry.getValue() > mostProductiveNumber) {
                 mostProductiveUser = entry.getKey();
+                mostProductiveNumber = entry.getValue();
             } else if (entry.getValue() == mostProductiveNumber &&
                     entry.getKey().compareTo(mostProductiveUser) < 0) {
                 mostProductiveUser = entry.getKey();
             }
         }
         return mostProductiveUser;
-    }
-
-    public void logTweet(String user, String message) {
-        if (!userTweeterLength.containsKey(user)) {
-            userTweeterLength.put(user, 0);
-        }
-
-        userTweeterLength.put(user, userTweeterLength.get(user) + message.length());
-
-        updateLongestAttemptedTweetLength(message);
-    }
-
-    public void logFailedTweet(String user, String message) {
-        updateLongestAttemptedTweetLength(message);
-    }
-
-    private void updateLongestAttemptedTweetLength(String message) {
-        if (message.length() > longestAttemptedTweetLength) {
-            longestAttemptedTweetLength = message.length();
-        }
-    }
-
-    public void logFollow(String follower, String followee) {
-        if (!userFollowee.containsKey(followee)) {
-            userFollowee.put(followee, new HashSet<String>());
-        }
-
-        userFollowee.get(followee).add(follower);
     }
 }
 
