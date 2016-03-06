@@ -12,10 +12,15 @@ public class App {
 
         ApplicationContext ctx = new ClassPathXmlApplicationContext("context.xml");
         TweetService tweeter = (TweetService) ctx.getBean("tweetServiceProxy");
-        TweetStats tweetStats = (TweetStats) ctx.getBean("tweetStats");
+        TweetStatsImpl tweetStats = (TweetStatsImpl) ctx.getBean("tweetStats");
 
         try {
             tweeter.tweet("alex", "first tweet");
+            tweeter.follow("alex", "bob");
+
+//            tweetStats.logTweet("alex", "first tweet");
+//            tweetStats.logFollow("alex", "bob");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
