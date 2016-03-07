@@ -15,6 +15,26 @@ public class App {
         TweetStats tweetStats = (TweetStats) ctx.getBean("tweetStats");
 
         try {
+            tweetStats.resetStats();
+            tweeter.tweet("foo", "barbar");
+            System.out.println("Length of the longest tweet: " + tweetStats.getLengthOfLongestTweetAttempted());
+
+            tweeter.follow("alex", "bob");
+            tweeter.follow("bob", "alex");
+            try {
+                tweeter.follow("charles", "bob");
+            } catch (Exception e) {
+
+            }
+            try {
+
+                tweeter.follow("charles", "bob");
+            } catch (Exception e) {
+
+            }
+            System.out.println("Most followed user: " + tweetStats.getMostFollowedUser());
+
+            tweetStats.resetStats();
             tweeter.tweet("alex", "first tweet");
             tweeter.tweet("alex", "second tweet");
 
@@ -22,17 +42,23 @@ public class App {
             tweeter.tweet("bob", "second tweet");
             tweeter.tweet("bob", "third tweet");
 
-            tweeter.follow("alex", "bob");
+            try {
+
+                tweeter.tweet("charles", "sa;kdjfksdfdfdfdfdfdfdfjfdkfjkdjfkdjfkdjfkdjkfjdkfjkdjfkdjflkdjfkljdk");
+            } catch (Exception e) {
+
+            }
+
             tweeter.follow("alex", "charles");
             tweeter.follow("alex", "david");
 
             tweeter.follow("david", "alex");
-            tweeter.follow("bob", "alex");
 
-            tweeter.follow("charles", "bob");
+
+            tweeter.follow("bob", "charles");
 
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
         System.out.println("Most productive user: " + tweetStats.getMostProductiveUser());

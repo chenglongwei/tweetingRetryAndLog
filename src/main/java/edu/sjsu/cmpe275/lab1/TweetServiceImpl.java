@@ -10,11 +10,19 @@ public class TweetServiceImpl implements TweetService {
      */
 
     public void tweet(String user, String message) throws IllegalArgumentException, IOException {
+        if (message.contains("network error")) {
+            throw new IOException("network error");
+        }
 
+        if (message.length() > 20) {
+            throw new IllegalArgumentException("tweet length bigger than 140");
+        }
     }
 
     public void follow(String follower, String followee) throws IOException {
-
+        if (follower.equals("charles") && followee.equals("bob")) {
+            throw new IOException("network error");
+        }
     }
 
 }

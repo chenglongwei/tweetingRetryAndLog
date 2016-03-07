@@ -36,10 +36,10 @@ public class RetryAndDoStats implements MethodInterceptor {
             return retVal;
 
         } catch (IOException ioe) {
-            // retry 3 times
-            if (count <= RETRY_TIMES) {
-                invoke(invocation);
+            // retry 3 times, count is already retry times
+            if (count < RETRY_TIMES) {
                 count++;
+                invoke(invocation);
             } else {
                 // retry over 3 times
                 count = 0;
