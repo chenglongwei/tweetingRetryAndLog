@@ -2,6 +2,7 @@ package edu.sjsu.cmpe275.lab1;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.ExceptionDepthComparator;
 
 public class App {
     public static void main(String[] args) {
@@ -20,15 +21,20 @@ public class App {
             System.out.println("Length of the longest tweet: " + tweetStats.getLengthOfLongestTweetAttempted());
 
             tweeter.follow("alex", "bob");
-            tweeter.follow("bob", "alex");
+
             try {
                 tweeter.follow("charles", "bob");
             } catch (Exception e) {
 
             }
             try {
-
                 tweeter.follow("charles", "bob");
+            } catch (Exception e) {
+
+            }
+
+            try {
+                tweeter.follow("bob", "alex");
             } catch (Exception e) {
 
             }
@@ -56,6 +62,10 @@ public class App {
 
 
             tweeter.follow("bob", "charles");
+
+            tweetStats.resetStats();
+            tweeter.follow("alex", "david");
+            tweeter.follow("david", "alex");
 
         } catch (Exception e) {
 //            e.printStackTrace();

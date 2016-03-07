@@ -20,3 +20,4 @@ project/plugins/project/
 /project/target
 
 *.iml
+*.DS_Store

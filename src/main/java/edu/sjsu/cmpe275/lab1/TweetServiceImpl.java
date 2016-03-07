@@ -19,8 +19,15 @@ public class TweetServiceImpl implements TweetService {
         }
     }
 
+    static boolean flag = true;
+
     public void follow(String follower, String followee) throws IOException {
-        if (follower.equals("charles") && followee.equals("bob")) {
+        if (flag && follower.equals("charles") && followee.equals("bob")) {
+            flag = !flag;
+            throw new IOException("network error");
+        }
+
+        if (follower.equals("bob") && followee.equals("alex")) {
             throw new IOException("network error");
         }
     }

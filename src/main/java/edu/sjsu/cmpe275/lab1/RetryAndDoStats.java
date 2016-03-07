@@ -27,6 +27,9 @@ public class RetryAndDoStats implements MethodInterceptor {
         try {
             Object retVal = invocation.proceed();
 
+            // success return should reset count
+            count = 0;
+
             if (isFollowMethod(invocation)) {
                 Statics.getInstance().logFollow(arg1, arg2);
             } else if (isTweetMethod(invocation)) {
