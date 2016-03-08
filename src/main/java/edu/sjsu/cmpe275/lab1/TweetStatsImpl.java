@@ -2,31 +2,36 @@ package edu.sjsu.cmpe275.lab1;
 
 import java.util.Map;
 import java.util.Set;
+/***
+ * Created by Chenglong Wei on 3/5/16.
+ * Student ID: 010396464
+ * This is the implementation of Tweet statistics:
+ * (1) resetStats
+ * (2) getLengthOfLongestTweetAttempted
+ * (3) getMostFollowedUser
+ * (4) getMostProductiveUser
+ */
 
 public class TweetStatsImpl implements TweetStats {
-    // The user and followee number map.
+    // The user and followees map.
     private Map<String, Set<String>> userFollowee;
     // The user and Tweeter length map.
     private Map<String, Integer> userTweeterLength;
 
-    /***
-     * Following is the dummy implementation of methods.
-     * Students are expected to complete the actual implementation of these methods as part of lab completion.
-     */
-
+    // Get the statistics information from RetryAndDoStats.
     public TweetStatsImpl() {
-        userFollowee = Statics.getInstance().getUserFollowee();
-        userTweeterLength = Statics.getInstance().getUserTweeterLength();
+        userFollowee = RetryAndDoStats.getUserFollowee();
+        userTweeterLength = RetryAndDoStats.getUserTweeterLength();
     }
 
     @Override
     public void resetStats() {
-        Statics.getInstance().resetStats();
+        RetryAndDoStats.resetStats();
     }
 
     @Override
     public int getLengthOfLongestTweetAttempted() {
-        return Statics.getInstance().getLongestAttemptedTweetLength();
+        return RetryAndDoStats.getLongestAttemptedTweetLength();
     }
 
     @Override

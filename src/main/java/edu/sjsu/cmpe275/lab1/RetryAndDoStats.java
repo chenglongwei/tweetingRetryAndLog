@@ -9,38 +9,65 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/***
+ * Created by Chenglong Wei on 3/5/16.
+ * Student ID: 010396464
+ * This is the implementation of advice:
+ * (1) Retry 3 up to times for network error.
+ * (2) Log statistics of tweet and follow information and store in the map.
+ */
+
 public class RetryAndDoStats implements MethodInterceptor {
     // retry times because network error.
     private static final int RETRY_TIMES = 3;
+    // The longest attempted tweet length.
+    private static int longestAttemptedTweetLength;
+    // The user and followees map.
+    private static Map<String, Set<String>> userFollowee;
+    // The user and Tweeter length map.
+    private static Map<String, Integer> userTweeterLength;
+
+    // This static block will be called when the class is loaded.
+    // We use this static block to initialize the static members.
+    static  {
+        longestAttemptedTweetLength = 0;
+        userFollowee = new HashMap<String, Set<String>>();
+        userTweeterLength = new HashMap<String, Integer>();
+    }
 
     /***
-     * Following is the dummy implementation of advice.
-     * Students are expected to complete the required implementation as part of lab completion.
+     * Following is the implementation of advice.
      */
     public Object invoke(MethodInvocation invocation) throws Throwable {
+        // Get arguments of tweet() and follow().
         String arg1 = (String) invocation.getArguments()[0];
         String arg2 = (String) invocation.getArguments()[1];
 
+        // Current retry times.
         int numRetry = 0;
+        // The exception of the invocation throws.
         IOException exception;
         do {
             try {
+                // Proceed the method.
                 Object retVal = invocation.proceed();
 
+                // Here the follow/tweet success, do the log.
                 if (isFollowMethod(invocation)) {
-                    Statics.getInstance().logFollow(arg1, arg2);
+                    logFollow(arg1, arg2);
                 } else if (isTweetMethod(invocation)) {
-                    Statics.getInstance().logTweet(arg1, arg2);
+                    logTweet(arg1, arg2);
                 }
 
                 return retVal;
 
             } catch (IOException e) {
+                // Catch network error, retry three times.
                 exception = e;
                 numRetry++;
             } catch (IllegalArgumentException e) {
                 if (isTweetMethod(invocation)) {
-                    Statics.getInstance().logFailedTweet(arg1, arg2);
+                    logFailedTweet(arg1, arg2);
                 }
                 throw e;
             }
@@ -48,7 +75,7 @@ public class RetryAndDoStats implements MethodInterceptor {
 
         if (numRetry > RETRY_TIMES) {
             if (isTweetMethod(invocation)) {
-                Statics.getInstance().logFailedTweet(arg1, arg2);
+                logFailedTweet(arg1, arg2);
             }
             throw exception;
         }
@@ -63,39 +90,31 @@ public class RetryAndDoStats implements MethodInterceptor {
     private boolean isFollowMethod(MethodInvocation invocation) {
         return invocation.getMethod().getName().equals("follow");
     }
-}
 
-class Statics {
-    // The longest attempted tweet length.
-    private int longestAttemptedTweetLength;
-    // The user and followee number map.
-    private Map<String, Set<String>> userFollowee;
-    // The user and Tweeter length map.
-    private Map<String, Integer> userTweeterLength;
-
-    //SingleTon
-    private Statics() {
-        longestAttemptedTweetLength = 0;
-        userFollowee = new HashMap<String, Set<String>>();
-        userTweeterLength = new HashMap<String, Integer>();
-    }
-
-    private static Statics instance = null;
-
-    public static Statics getInstance() {
-        if (instance == null) {
-            instance = new Statics();
-        }
-        return instance;
-    }
-
-    public void resetStats() {
+    // Reset statistics.
+    public static void resetStats() {
         longestAttemptedTweetLength = 0;
         userFollowee.clear();
         userTweeterLength.clear();
     }
 
-    public void logTweet(String user, String message) {
+    // Return the statics information of longest attempted tweet.
+    public static int getLongestAttemptedTweetLength() {
+        return longestAttemptedTweetLength;
+    }
+
+    // Return the statics information of follow.
+    public static Map<String, Set<String>> getUserFollowee() {
+        return userFollowee;
+    }
+
+    // Return the statics information of successful tweets length.
+    public static Map<String, Integer> getUserTweeterLength() {
+        return userTweeterLength;
+    }
+
+    // Log successful tweets.
+    private void logTweet(String user, String message) {
         if (!userTweeterLength.containsKey(user)) {
             userTweeterLength.put(user, 0);
         }
@@ -104,28 +123,18 @@ class Statics {
         updateLongestAttemptedTweetLength(message);
     }
 
-    public void logFailedTweet(String user, String message) {
+    // Log failed tweets, we need to update longest attempted tweet.
+    private void logFailedTweet(String user, String message) {
         updateLongestAttemptedTweetLength(message);
     }
 
-    public void logFollow(String follower, String followee) {
+    // Log successful follows.
+    private void logFollow(String follower, String followee) {
         if (!userFollowee.containsKey(followee)) {
             userFollowee.put(followee, new HashSet<String>());
         }
 
         userFollowee.get(followee).add(follower);
-    }
-
-    public int getLongestAttemptedTweetLength() {
-        return longestAttemptedTweetLength;
-    }
-
-    public Map<String, Set<String>> getUserFollowee() {
-        return userFollowee;
-    }
-
-    public Map<String, Integer> getUserTweeterLength() {
-        return userTweeterLength;
     }
 
     private void updateLongestAttemptedTweetLength(String message) {
