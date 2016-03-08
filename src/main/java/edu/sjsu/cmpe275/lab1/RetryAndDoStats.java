@@ -11,7 +11,6 @@ import java.util.Set;
 
 public class RetryAndDoStats implements MethodInterceptor {
     // retry times because network error.
-    private static int count = 0;
     private static final int RETRY_TIMES = 3;
 
     /***
@@ -21,41 +20,37 @@ public class RetryAndDoStats implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         String arg1 = (String) invocation.getArguments()[0];
         String arg2 = (String) invocation.getArguments()[1];
-        System.out.println("Method " + invocation.getMethod().getName() +
-                "(" + arg1 + ", " + arg2 + ") is called");
 
-        try {
-            Object retVal = invocation.proceed();
+        int numRetry = 0;
+        IOException exception;
+        do {
+            try {
+                Object retVal = invocation.proceed();
 
-            // success return should reset count
-            count = 0;
+                if (isFollowMethod(invocation)) {
+                    Statics.getInstance().logFollow(arg1, arg2);
+                } else if (isTweetMethod(invocation)) {
+                    Statics.getInstance().logTweet(arg1, arg2);
+                }
 
-            if (isFollowMethod(invocation)) {
-                Statics.getInstance().logFollow(arg1, arg2);
-            } else if (isTweetMethod(invocation)) {
-                Statics.getInstance().logTweet(arg1, arg2);
-            }
+                return retVal;
 
-            return retVal;
-
-        } catch (IOException ioe) {
-            // retry 3 times, count is already retry times
-            if (count < RETRY_TIMES) {
-                count++;
-                invoke(invocation);
-            } else {
-                // retry over 3 times
-                count = 0;
+            } catch (IOException e) {
+                exception = e;
+                numRetry++;
+            } catch (IllegalArgumentException e) {
                 if (isTweetMethod(invocation)) {
                     Statics.getInstance().logFailedTweet(arg1, arg2);
                 }
-                throw ioe;
+                throw e;
             }
-        } catch (IllegalArgumentException e) {
+        } while (numRetry <= RETRY_TIMES);
+
+        if (numRetry > RETRY_TIMES) {
             if (isTweetMethod(invocation)) {
                 Statics.getInstance().logFailedTweet(arg1, arg2);
             }
-            throw e;
+            throw exception;
         }
 
         return null;

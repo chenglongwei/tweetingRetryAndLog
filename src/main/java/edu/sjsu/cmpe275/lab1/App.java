@@ -17,7 +17,18 @@ public class App {
 
         try {
             tweetStats.resetStats();
-            tweeter.tweet("foo", "barbar");
+            try {
+                tweeter.tweet("foo", "network error");
+            } catch (Exception e) {
+
+            }
+
+            try {
+                tweeter.tweet("foo", "network error with flag");
+            } catch (Exception e) {
+
+            }
+
             System.out.println("Length of the longest tweet: " + tweetStats.getLengthOfLongestTweetAttempted());
 
             tweeter.follow("alex", "bob");
