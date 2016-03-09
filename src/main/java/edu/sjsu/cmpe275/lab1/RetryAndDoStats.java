@@ -2,38 +2,27 @@ package edu.sjsu.cmpe275.lab1;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /***
  * Created by Chenglong Wei on 3/5/16.
  * Student ID: 010396464
- * This is the implementation of advice:
+ *
+ * Use ApplicationContextAware to inject singleton bean tweetStats.
+ * This is the implementation of advice.
  * (1) Retry 3 up to times for network error.
- * (2) Log statistics of tweet and follow information and store in the map.
+ * (2) Log events of tweet and follow.
  */
 
-public class RetryAndDoStats implements MethodInterceptor {
-    // retry times because network error.
+public class RetryAndDoStats implements MethodInterceptor, ApplicationContextAware {
+    // Retry times because of network error.
     private static final int RETRY_TIMES = 3;
-    // The longest attempted tweet length.
-    private static int longestAttemptedTweetLength;
-    // The user and followees map, value is a Set to remove duplicate follow.
-    private static Map<String, Set<String>> userFollowee;
-    // The user and Tweeter length map.
-    private static Map<String, Integer> userTweeterLength;
-
-    // This static block will be called when the class is loaded.
-    // Use this static block to initialize the static members.
-    static  {
-        longestAttemptedTweetLength = 0;
-        userFollowee = new HashMap<String, Set<String>>();
-        userTweeterLength = new HashMap<String, Integer>();
-    }
+    // TweetStatsImpl which has api to log tweet and follow events.
+    private TweetStatsImpl tweetStats;
 
     /***
      * Following is the implementation of advice.
@@ -54,9 +43,9 @@ public class RetryAndDoStats implements MethodInterceptor {
 
                 // Here the follow/tweet success, do the log.
                 if (isFollowMethod(invocation)) {
-                    logFollow(arg1, arg2);
+                    tweetStats.logFollow(arg1, arg2);
                 } else if (isTweetMethod(invocation)) {
-                    logTweet(arg1, arg2);
+                    tweetStats.logTweet(arg1, arg2);
                 }
 
                 return retVal;
@@ -68,7 +57,7 @@ public class RetryAndDoStats implements MethodInterceptor {
             } catch (IllegalArgumentException e) {
                 // If tweeter is more than 140, log the max length.
                 if (isTweetMethod(invocation)) {
-                    logFailedTweet(arg1, arg2);
+                    tweetStats.logFailedTweet(arg1, arg2);
                 }
                 throw e;
             }
@@ -77,7 +66,7 @@ public class RetryAndDoStats implements MethodInterceptor {
         // Only retry fails arrive here, log the failed tweeter.
         if (numRetry > RETRY_TIMES) {
             if (isTweetMethod(invocation)) {
-                logFailedTweet(arg1, arg2);
+                tweetStats.logFailedTweet(arg1, arg2);
             }
             throw exception;
         }
@@ -93,55 +82,8 @@ public class RetryAndDoStats implements MethodInterceptor {
         return invocation.getMethod().getName().equals("follow");
     }
 
-    // Reset statistics.
-    public static void resetStats() {
-        longestAttemptedTweetLength = 0;
-        userFollowee.clear();
-        userTweeterLength.clear();
-    }
-
-    // Return the statics information of longest attempted tweet.
-    public static int getLongestAttemptedTweetLength() {
-        return longestAttemptedTweetLength;
-    }
-
-    // Return the statics information of follow.
-    public static Map<String, Set<String>> getUserFollowee() {
-        return userFollowee;
-    }
-
-    // Return the statics information of successful tweets length.
-    public static Map<String, Integer> getUserTweeterLength() {
-        return userTweeterLength;
-    }
-
-    // Log successful tweets.
-    private void logTweet(String user, String message) {
-        if (!userTweeterLength.containsKey(user)) {
-            userTweeterLength.put(user, 0);
-        }
-
-        userTweeterLength.put(user, userTweeterLength.get(user) + message.length());
-        updateLongestAttemptedTweetLength(message);
-    }
-
-    // Log failed tweets, we need to update longest attempted tweet.
-    private void logFailedTweet(String user, String message) {
-        updateLongestAttemptedTweetLength(message);
-    }
-
-    // Log successful follows.
-    private void logFollow(String follower, String followee) {
-        if (!userFollowee.containsKey(followee)) {
-            userFollowee.put(followee, new HashSet<String>());
-        }
-
-        userFollowee.get(followee).add(follower);
-    }
-
-    private void updateLongestAttemptedTweetLength(String message) {
-        if (message.length() > longestAttemptedTweetLength) {
-            longestAttemptedTweetLength = message.length();
-        }
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        // Use the applicationContext to initialize tweetStats.
+        tweetStats = (TweetStatsImpl) applicationContext.getBean("tweetStats");
     }
 }

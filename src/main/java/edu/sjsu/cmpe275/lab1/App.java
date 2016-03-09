@@ -42,6 +42,8 @@ public class App {
 
             }
 
+            test(tweetStats);
+
             try {
                 tweeter.tweet("foo", "network error with flag");
             } catch (Exception e) {

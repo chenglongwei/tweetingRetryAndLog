@@ -1,7 +1,10 @@
 package edu.sjsu.cmpe275.lab1;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 /***
  * Created by Chenglong Wei on 3/5/16.
  * Student ID: 010396464
@@ -13,25 +16,29 @@ import java.util.Set;
  */
 
 public class TweetStatsImpl implements TweetStats {
-    // The user and followees map.
+    // The longest attempted tweet length.
+    private int longestAttemptedTweetLength;
+    // The user and followees map, value is a Set to remove duplicate follow.
     private Map<String, Set<String>> userFollowee;
-    // The user and Tweeter length map.
+    // The user and total Tweeter length map.
     private Map<String, Integer> userTweeterLength;
 
-    // Get the statistics information from RetryAndDoStats.
     public TweetStatsImpl() {
-        userFollowee = RetryAndDoStats.getUserFollowee();
-        userTweeterLength = RetryAndDoStats.getUserTweeterLength();
+        longestAttemptedTweetLength = 0;
+        userFollowee = new HashMap<String, Set<String>>();
+        userTweeterLength = new HashMap<String, Integer>();
     }
 
     @Override
     public void resetStats() {
-        RetryAndDoStats.resetStats();
+        longestAttemptedTweetLength = 0;
+        userFollowee.clear();
+        userTweeterLength.clear();
     }
 
     @Override
     public int getLengthOfLongestTweetAttempted() {
-        return RetryAndDoStats.getLongestAttemptedTweetLength();
+        return longestAttemptedTweetLength;
     }
 
     @Override
@@ -83,6 +90,36 @@ public class TweetStatsImpl implements TweetStats {
             }
         }
         return mostProductiveUser;
+    }
+
+    // Log successful tweets.
+    public void logTweet(String user, String message) {
+        if (!userTweeterLength.containsKey(user)) {
+            userTweeterLength.put(user, 0);
+        }
+
+        userTweeterLength.put(user, userTweeterLength.get(user) + message.length());
+        updateLongestAttemptedTweetLength(message);
+    }
+
+    // Log failed tweets, we need to update longest attempted tweet.
+    public void logFailedTweet(String user, String message) {
+        updateLongestAttemptedTweetLength(message);
+    }
+
+    // Log successful follows.
+    public void logFollow(String follower, String followee) {
+        if (!userFollowee.containsKey(followee)) {
+            userFollowee.put(followee, new HashSet<String>());
+        }
+
+        userFollowee.get(followee).add(follower);
+    }
+
+    private void updateLongestAttemptedTweetLength(String message) {
+        if (message.length() > longestAttemptedTweetLength) {
+            longestAttemptedTweetLength = message.length();
+        }
     }
 }
 
