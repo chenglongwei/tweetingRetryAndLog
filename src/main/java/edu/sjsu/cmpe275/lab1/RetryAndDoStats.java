@@ -22,13 +22,13 @@ public class RetryAndDoStats implements MethodInterceptor {
     private static final int RETRY_TIMES = 3;
     // The longest attempted tweet length.
     private static int longestAttemptedTweetLength;
-    // The user and followees map.
+    // The user and followees map, value is a Set to remove duplicate follow.
     private static Map<String, Set<String>> userFollowee;
     // The user and Tweeter length map.
     private static Map<String, Integer> userTweeterLength;
 
     // This static block will be called when the class is loaded.
-    // We use this static block to initialize the static members.
+    // Use this static block to initialize the static members.
     static  {
         longestAttemptedTweetLength = 0;
         userFollowee = new HashMap<String, Set<String>>();
@@ -66,6 +66,7 @@ public class RetryAndDoStats implements MethodInterceptor {
                 exception = e;
                 numRetry++;
             } catch (IllegalArgumentException e) {
+                // If tweeter is more than 140, log the max length.
                 if (isTweetMethod(invocation)) {
                     logFailedTweet(arg1, arg2);
                 }
@@ -73,6 +74,7 @@ public class RetryAndDoStats implements MethodInterceptor {
             }
         } while (numRetry <= RETRY_TIMES);
 
+        // Only retry fails arrive here, log the failed tweeter.
         if (numRetry > RETRY_TIMES) {
             if (isTweetMethod(invocation)) {
                 logFailedTweet(arg1, arg2);

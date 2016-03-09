@@ -23,7 +23,7 @@ public class TweetServiceImpl implements TweetService {
             throw new IOException("network error");
         }
 
-        if (message.length() > 20) {
+        if (message.length() > 40) {
             throw new IllegalArgumentException("tweet length bigger than 140");
         }
     }

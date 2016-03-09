@@ -17,6 +17,25 @@ public class App {
 
         try {
             tweetStats.resetStats();
+            test(tweetStats);
+
+            tweeter.tweet("b", "bbbccc");
+            test(tweetStats);
+            tweeter.tweet("a", "bbbccc");
+            test(tweetStats);
+            tweeter.tweet("b", "dddddddddd");
+            test(tweetStats);
+
+            tweeter.follow("b", "c");
+            tweeter.follow("b", "c");
+            test(tweetStats);
+            tweeter.follow("a", "b");
+            test(tweetStats);
+            tweeter.follow("a", "c");
+            test(tweetStats);
+
+            tweetStats.resetStats();
+
             try {
                 tweeter.tweet("foo", "network error");
             } catch (Exception e) {
@@ -28,10 +47,10 @@ public class App {
             } catch (Exception e) {
 
             }
-
-            System.out.println("Length of the longest tweet: " + tweetStats.getLengthOfLongestTweetAttempted());
+            test(tweetStats);
 
             tweeter.follow("alex", "bob");
+            test(tweetStats);
 
             try {
                 tweeter.follow("charles", "bob");
@@ -49,7 +68,7 @@ public class App {
             } catch (Exception e) {
 
             }
-            System.out.println("Most followed user: " + tweetStats.getMostFollowedUser());
+            test(tweetStats);
 
             tweetStats.resetStats();
             tweeter.tweet("alex", "first tweet");
@@ -59,12 +78,14 @@ public class App {
             tweeter.tweet("bob", "second tweet");
             tweeter.tweet("bob", "third tweet");
 
-            try {
+            test(tweetStats);
 
-                tweeter.tweet("charles", "sa;kdjfksdfdfdfdfdfdfdfjfdkfjkdjfkdjfkdjfkdjkfjdkfjkdjfkdjflkdjfkljdk");
+            try {
+                tweeter.tweet("charles", "sa;kdjfksdfdfdfdfdfdfdfjfdkfjkdjfkdjfkdjfkdjkfjdkfjkdjfkdjflkdjfkljdkdjfksdfdfdfdfdfdfdfjfdkfjkdjfkdjfkdjfkdjkfjdkfjkdjfkdjflkdjfkljdkk");
             } catch (Exception e) {
 
             }
+            test(tweetStats);
 
             tweeter.follow("alex", "charles");
             tweeter.follow("alex", "david");
@@ -82,6 +103,10 @@ public class App {
 //            e.printStackTrace();
         }
 
+        test(tweetStats);
+    }
+
+    private static void test(TweetStats tweetStats) {
         System.out.println("Most productive user: " + tweetStats.getMostProductiveUser());
         System.out.println("Most followed user: " + tweetStats.getMostFollowedUser());
         System.out.println("Length of the longest tweet: " + tweetStats.getLengthOfLongestTweetAttempted());
